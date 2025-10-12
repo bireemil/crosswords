@@ -10,7 +10,7 @@ function fingerprint(p) {
 
 async function loadAll() {
   levelsEl.innerHTML = '<div style="color:#fff;opacity:.8">Loading…</div>';
-  const res = await fetch('../grids.jsonl');
+  const res = await fetch('./grids.jsonl');
   if (!res.ok) { levelsEl.innerHTML = '<div style="color:#fff;opacity:.8">Failed to load grids.jsonl</div>'; return; }
   const lines = (await res.text()).split('\n').filter(l=>l.trim().length>0);
   allPuzzles = lines.map((l, idx) => {
