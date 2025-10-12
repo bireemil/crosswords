@@ -159,9 +159,14 @@ function updateCurrentClue() {
     if (focus.dir==='across') { if (e.row===focus.y && focus.x>=e.col && focus.x<e.col+e.len) { entry = e; break; } }
     else { if (e.col===focus.x && focus.y>=e.row && focus.y<e.row+e.len) { entry = e; break; } }
   }
-  curDirEl.textContent = focus.dir==='across'?'Across':'Down';
+  curDirEl.textContent = (focus.dir==='across') ? '<-->' : '↕';
   curNumEl.textContent = entry?.number ?? '—';
   curTextEl.textContent = entry?.clue ?? '';
+}
+
+function refreshHintCounter() {
+  const hc = document.getElementById('hint-counter');
+  if (hc) hc.textContent = `😘 ${hintCount}`;
 }
 
 function markCorrectWords() {
@@ -231,7 +236,6 @@ function renderOnScreenKeyboard() {
 
 function useHint() {
   if (!puzzle) return;
-  // If current cell is a block or already correct, try to move to next editable cell
   if (puzzle.puzzle[focus.y][focus.x] === '#') return;
   const want = normalizeChar(solNorm?.[focus.y]?.[focus.x] || '');
   if (!filled[focus.y][focus.x]) {
@@ -241,7 +245,7 @@ function useHint() {
     const ltr = cell?.querySelector('.ltr');
     if (ltr) ltr.textContent = want;
     hintCount += 1;
-    if (statusEl) statusEl.textContent = `Hints: ${hintCount} — ${W}×${H}`;
+    refreshHintCounter();
     markCorrectWords();
   }
 }
@@ -315,7 +319,8 @@ async function loadRandom() {
     }
     renderGrid();
     renderOnScreenKeyboard();
-    if (statusEl) statusEl.textContent = `Hints: ${hintCount} — ${W}×${H}`;
+    refreshHintCounter();
+    if (statusEl) statusEl.textContent = '';
   } catch {
     if (statusEl) statusEl.textContent = 'Failed to render grid';
   }

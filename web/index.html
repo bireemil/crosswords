@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Supers jeux</title>
+  <title>Choisi une autre grille</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#121212" />
@@ -12,8 +12,9 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./menu.html">Supers jeux</a>
-    <div class="controls"></div>
+    <div class="spacer"></div>
+    <a class="brand" href="./menu.html">Choisi une autre grille</a>
+    <div id="hint-counter" class="hint-counter"></div>
   </header>
   <div class="current-clue">
     <span id="current-dir">Across</span>
@@ -28,7 +29,7 @@
   </main>
 
   <footer class="status">
-    <span id="status-text">Hints: 0</span>
+    <span id="status-text"></span>
   </footer>
   <div id="osk" class="osk"></div>
 
