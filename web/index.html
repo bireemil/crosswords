@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mots-croisés de Camillette</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#121212" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Mots-croisés de Camillette</div>
+    <div class="controls">
+      <button id="btn-menu">Menu</button>
+      <button id="btn-hint">Hint</button>
+      <label class="toggle"><input type="checkbox" id="toggle-dark"> Dark</label>
+    </div>
+  </header>
+  <div class="current-clue">
+    <span id="current-dir">Across</span>
+    <span id="current-num">—</span>
+    <span id="current-text">Click a cell or pick a clue to start.</span>
+  </div>
+
+  <main class="layout">
+    <section class="grid-panel">
+      <div class="grid-wrap"><div id="grid" class="grid"></div></div>
+    </section>
+    <section class="clues-panel">
+      <div class="clues">
+        <h3>Across</h3>
+        <ul id="clues-across"></ul>
+      </div>
+      <div class="clues">
+        <h3>Down</h3>
+        <ul id="clues-down"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="status">
+    <span id="status-text">Hints: 0</span>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+  <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}</script>
+  <noscript>Please enable JavaScript to play the crossword.</noscript>
+</body>
+</html>
+
+
