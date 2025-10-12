@@ -1,4 +1,4 @@
-const CACHE_NAME = 'arrow-words-memetic-v2';
+const CACHE_NAME = 'arrow-words-memetic-v3';
 const ASSETS = [
   './',
   './index.html',
