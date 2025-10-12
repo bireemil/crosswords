@@ -221,8 +221,9 @@ function renderOnScreenKeyboard() {
   rows.forEach(r => oskEl.appendChild(makeRow(r)));
   const ctrlRow = document.createElement('div');
   ctrlRow.className = 'osk-row';
-  ctrlRow.style.gridTemplateColumns = '1fr 1fr';
+  ctrlRow.style.gridTemplateColumns = '1fr 1fr 1fr';
   const mk = (label, handler) => { const b=document.createElement('button'); b.className = 'osk-key'; b.textContent=label; b.addEventListener('click', handler); return b; };
+  ctrlRow.appendChild(mk('💡', useHint));
   ctrlRow.appendChild(mk('↕', toggleDirection));
   ctrlRow.appendChild(mk('⌫', backspace));
   oskEl.appendChild(ctrlRow);
@@ -329,6 +330,9 @@ if (hintBtn) hintBtn.addEventListener('click', useHint);
 toggleDarkEl?.addEventListener('change', (e)=>{ document.body.classList.toggle('light', !e.target.checked); });
 // Default to LIGHT theme
 if (toggleDarkEl) { toggleDarkEl.checked = false; document.body.classList.add('light'); }
+
+// Force light theme only
+document.body.classList.add('light');
 
 function relayout() { renderGrid(); }
 window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer = setTimeout(relayout, 120); });
