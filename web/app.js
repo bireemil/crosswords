@@ -19,6 +19,7 @@ let solNorm = [];
 let hintCount = 0;
 let lastMobileValue = '';
 let resizeTimer = null;
+let isComposing = false;
 
 async function fetchTextWithFallback(path) {
   const bust = `${path}?v=${Date.now()}`;
@@ -406,20 +407,38 @@ document.addEventListener('keydown', (e)=>{
 // Mobile input handling
 if (mobileInputEl) {
   mobileInputEl.value = '';
+  mobileInputEl.addEventListener('compositionstart', ()=>{ isComposing = true; });
+  mobileInputEl.addEventListener('compositionend', (e)=>{
+    isComposing = false;
+    const ch = (e.data||'').slice(-1);
+    if (ch) enterLetter(ch);
+    mobileInputEl.value = '';
+    lastMobileValue = '';
+    focusMobileEditor();
+  });
   mobileInputEl.addEventListener('beforeinput', (e)=>{
     if (e.inputType === 'deleteContentBackward') {
       backspace();
       e.preventDefault();
+      return;
+    }
+    if (e.inputType === 'insertText' || e.inputType === 'insertCompositionText') {
+      const ch = (e.data||'').slice(-1);
+      if (ch) enterLetter(ch);
+      e.preventDefault();
+      mobileInputEl.value = '';
+      lastMobileValue = '';
+      focusMobileEditor();
     }
   });
   mobileInputEl.addEventListener('input', (e)=>{
+    if (isComposing) return; // wait for compositionend
     const v = e.target.value || '';
     if (v.length > lastMobileValue.length) {
       const ch = v.slice(-1);
       enterLetter(ch);
     }
     lastMobileValue = v;
-    // keep the input short so the keyboard stays in predictable state
     if (mobileInputEl.value.length > 1) mobileInputEl.value = mobileInputEl.value.slice(-1);
   });
   // Focus hidden input when tapping anywhere on the grid area
