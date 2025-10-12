@@ -12,10 +12,12 @@
 </head>
 <body class="menu-min">
   <h1 class="menu-title">Select a Level</h1>
+  <div style="margin-bottom:12px"><button id="btn-reset" class="level-btn" style="height:44px;font-size:16px">Reset selection</button></div>
   <div id="levels" class="levels-grid"></div>
 
   <script type="module" src="menu.js"></script>
-  <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}</script>
+  <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}
+  const r=document.getElementById('btn-reset'); if(r){r.addEventListener('click',()=>{localStorage.removeItem('crossword:selected'); location.reload();});}</script>
 </body>
 </html>
 
