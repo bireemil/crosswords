@@ -20,6 +20,19 @@ let hintCount = 0;
 let lastMobileValue = '';
 let resizeTimer = null;
 
+async function fetchTextWithFallback(path) {
+  const bust = `${path}?v=${Date.now()}`;
+  try {
+    const res = await fetch(bust, { cache: 'no-store' });
+    if (res.ok) return await res.text();
+  } catch {}
+  try {
+    const res = await fetch(path);
+    if (res.ok) return await res.text();
+  } catch {}
+  return null;
+}
+
 function normalizeChar(ch) {
   if (!ch) return '';
   const upper = ch.toUpperCase();
@@ -119,6 +132,8 @@ function focusCell(y,x) {
   }
   if (mobileInputEl) {
     // Focus hidden input to show iOS keyboard
+    mobileInputEl.style.top = '0px';
+    mobileInputEl.style.left = '0px';
     mobileInputEl.value = '';
     lastMobileValue = '';
     mobileInputEl.focus();
@@ -256,10 +271,8 @@ async function loadRandom() {
     if (!puzzle) {
       let text = null;
       for (const path of ['./grids.jsonl', '../grids.jsonl']) {
-        try {
-          const res = await fetch(path);
-          if (res.ok) { text = await res.text(); break; }
-        } catch {}
+        text = await fetchTextWithFallback(path);
+        if (text) break;
       }
       if (text) {
         const lines = text.split('\n').filter(l=>l.trim().length>0);
