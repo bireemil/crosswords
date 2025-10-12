@@ -85,14 +85,29 @@ function renderGrid() {
   gridEl.innerHTML = '';
   const wrap = document.querySelector('.grid-wrap');
   const panel = document.querySelector('.grid-panel');
-  const containerWidth = Math.max(wrap?.clientWidth||0, panel?.clientWidth||0, window.innerWidth*0.9);
-  const maxWidth = containerWidth - 24;
+  // Available width inside panel
+  const widthAvail = Math.max(wrap?.clientWidth||0, panel?.clientWidth||0, window.innerWidth) - 24;
+  // Available height: viewport minus header/clue/footer/OSK paddings
+  const topbarH = document.querySelector('.topbar')?.offsetHeight || 0;
+  const clueH = document.querySelector('.current-clue')?.offsetHeight || 0;
+  const statusH = document.querySelector('.status')?.offsetHeight || 0;
+  const oskH = document.getElementById('osk')?.offsetHeight || 0;
+  const verticalPadding = 28; // grid-wrap paddings/margins
+  const heightAvail = Math.max(100, window.innerHeight - (topbarH + clueH + statusH + oskH + verticalPadding));
+
+  // Compute cell size constrained by width and height
+  const sizeW = Math.floor((widthAvail) / W) - 2; // -2 for gaps
+  const sizeH = Math.floor((heightAvail) / H) - 2;
   let cell = 45;
-  const needed = W * (cell + 2);
-  if (needed > maxWidth) cell = Math.max(28, Math.floor(maxWidth / W) - 2);
+  if (Number.isFinite(sizeW) && Number.isFinite(sizeH)) {
+    cell = Math.min(45, sizeW, sizeH);
+  }
+  cell = Math.max(22, cell); // keep a minimum tap size
+
   gridEl.style.setProperty('--cell-size', `${cell}px`);
   gridEl.style.setProperty('--cell-font', `${Math.round(cell*0.4)}px`);
   gridEl.style.gridTemplateColumns = `repeat(${W}, ${cell}px)`;
+
   for (let y=0;y<H;y++) {
     for (let x=0;x<W;x++) {
       const cellEl = document.createElement('div');
