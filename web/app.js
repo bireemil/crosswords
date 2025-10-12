@@ -40,6 +40,15 @@ function normalizeChar(ch) {
   return upper.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+function focusMobileEditor() {
+  if (!mobileInputEl) return;
+  try { mobileInputEl.focus({ preventScroll: true }); } catch { mobileInputEl.focus(); }
+  try {
+    const len = mobileInputEl.value.length;
+    mobileInputEl.setSelectionRange(len, len);
+  } catch {}
+}
+
 function computeNumbers() {
   numbers = Array.from({length:H}, ()=>Array(W).fill(null));
   let n = 1;
@@ -133,7 +142,7 @@ function focusCell(y,x) {
   if (mobileInputEl) {
     mobileInputEl.value = '';
     lastMobileValue = '';
-    try { mobileInputEl.focus({ preventScroll: true }); } catch { mobileInputEl.focus(); }
+    focusMobileEditor();
   }
   highlightFocus();
 }
@@ -208,6 +217,12 @@ function enterLetter(ch) {
   if (focus.dir==='across') move(1,0); else move(0,1);
   markCorrectWords();
   updateCurrentClue();
+  // Keep mobile input ready for the next character
+  if (mobileInputEl) {
+    mobileInputEl.value = '';
+    lastMobileValue = '';
+    focusMobileEditor();
+  }
 }
 
 function backspace() {
@@ -216,14 +231,16 @@ function backspace() {
     const cell = gridEl.children[focus.y*W+focus.x];
     const ltr = cell?.querySelector('.ltr');
     if (ltr) ltr.textContent='';
-    return;
+  } else {
+    if (focus.dir==='across') move(-1,0); else move(0,-1);
+    filled[focus.y][focus.x] = '';
+    const cell = gridEl.children[focus.y*W+focus.x];
+    const ltr = cell?.querySelector('.ltr');
+    if (ltr) ltr.textContent='';
   }
-  if (focus.dir==='across') move(-1,0); else move(0,-1);
-  filled[focus.y][focus.x] = '';
-  const cell = gridEl.children[focus.y*W+focus.x];
-  const ltr = cell?.querySelector('.ltr');
-  if (ltr) ltr.textContent='';
   markCorrectWords();
+  // Keep mobile input focused
+  if (mobileInputEl) focusMobileEditor();
 }
 
 function check() {
@@ -409,7 +426,7 @@ if (mobileInputEl) {
   document.addEventListener('click', (ev)=>{
     const t = ev.target;
     if (t && (t.closest?.('.grid') || t.closest?.('.grid-wrap'))) {
-      try { mobileInputEl.focus({ preventScroll: true }); } catch { mobileInputEl.focus(); }
+      focusMobileEditor();
     }
   });
 }
