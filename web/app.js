@@ -7,6 +7,7 @@ const toggleDarkEl = q('#toggle-dark');
 const curDirEl = q('#current-dir');
 const curNumEl = q('#current-num');
 const curTextEl = q('#current-text');
+const mobileInputEl = q('#mobile-input');
 
 let puzzle = null; // { puzzle:[], solution:[], clues }
 let W = 0, H = 0;
@@ -16,6 +17,8 @@ let numbers = []; // numbering matrix
 let entries = { across:[], down:[] };
 let solNorm = [];
 let hintCount = 0;
+let lastMobileValue = '';
+let resizeTimer = null;
 
 function normalizeChar(ch) {
   if (!ch) return '';
@@ -114,7 +117,22 @@ function focusCell(y,x) {
   } else {
     focus.y = y; focus.x = x;
   }
+  if (mobileInputEl) {
+    // Focus hidden input to show iOS keyboard
+    mobileInputEl.value = '';
+    lastMobileValue = '';
+    mobileInputEl.focus();
+  }
   highlightFocus();
+}
+
+function scrollFocusIntoView() {
+  if (window.innerWidth > 900) return;
+  const idx = focus.y*W + focus.x;
+  const cell = gridEl.children[idx];
+  if (cell && typeof cell.scrollIntoView === 'function') {
+    cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
 }
 
 function highlightFocus() {
@@ -134,6 +152,7 @@ function highlightFocus() {
   renderClues();
   markCorrectWords();
   updateCurrentClue();
+  scrollFocusIntoView();
 }
 
 function renderClues() {
@@ -235,9 +254,14 @@ async function loadRandom() {
     const saved = localStorage.getItem('crossword:selected');
     if (saved) puzzle = JSON.parse(saved);
     if (!puzzle) {
-      const res = await fetch('./grids.jsonl');
-      if (res.ok) {
-        const text = await res.text();
+      let text = null;
+      for (const path of ['./grids.jsonl', '../grids.jsonl']) {
+        try {
+          const res = await fetch(path);
+          if (res.ok) { text = await res.text(); break; }
+        } catch {}
+      }
+      if (text) {
         const lines = text.split('\n').filter(l=>l.trim().length>0);
         if (lines.length) {
           const r = Math.floor(Math.random()*lines.length);
@@ -350,12 +374,41 @@ document.addEventListener('keydown', (e)=>{
   else if (e.key.length === 1) enterLetter(e.key);
 });
 
+// Mobile input handling
+if (mobileInputEl) {
+  mobileInputEl.value = '';
+  mobileInputEl.addEventListener('beforeinput', (e)=>{
+    if (e.inputType === 'deleteContentBackward') {
+      backspace();
+      e.preventDefault();
+    }
+  });
+  mobileInputEl.addEventListener('input', (e)=>{
+    const v = e.target.value || '';
+    if (v.length > lastMobileValue.length) {
+      const ch = v.slice(-1);
+      enterLetter(ch);
+    }
+    lastMobileValue = v;
+    // keep the input short so the keyboard stays in predictable state
+    if (mobileInputEl.value.length > 1) mobileInputEl.value = mobileInputEl.value.slice(-1);
+  });
+  // Focus hidden input when tapping anywhere on the grid area
+  document.addEventListener('click', (ev)=>{
+    const t = ev.target;
+    if (t && (t.closest?.('.grid') || t.closest?.('.grid-wrap'))) {
+      mobileInputEl.focus();
+    }
+  });
+}
+
 // Remove Reveal/Check/Random; add Menu and Hint only
 const menuBtn = q('#btn-menu');
 if (menuBtn) menuBtn.addEventListener('click', ()=>{ window.location.href = './menu.html'; });
 const hintBtn = q('#btn-hint');
 if (hintBtn) hintBtn.addEventListener('click', useHint);
 
+// Theme toggle
 toggleDarkEl.addEventListener('change', (e)=>{
   document.body.classList.toggle('light', !e.target.checked);
 });
@@ -363,6 +416,15 @@ toggleDarkEl.addEventListener('change', (e)=>{
 // Default to LIGHT theme
 toggleDarkEl.checked = false;
 document.body.classList.add('light');
+
+// Relayout on resize/orientation change
+function relayout() { renderGrid(); }
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer); resizeTimer = setTimeout(relayout, 120);
+});
+window.addEventListener('orientationchange', ()=>{
+  clearTimeout(resizeTimer); resizeTimer = setTimeout(relayout, 120);
+});
 
 loadRandom();
 
