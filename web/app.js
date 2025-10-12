@@ -131,18 +131,17 @@ function focusCell(y,x) {
     focus.y = y; focus.x = x;
   }
   if (mobileInputEl) {
-    // Focus hidden input to show iOS keyboard
-    mobileInputEl.style.top = '0px';
-    mobileInputEl.style.left = '0px';
     mobileInputEl.value = '';
     lastMobileValue = '';
-    mobileInputEl.focus();
+    try { mobileInputEl.focus({ preventScroll: true }); } catch { mobileInputEl.focus(); }
   }
   highlightFocus();
 }
 
 function scrollFocusIntoView() {
   if (window.innerWidth > 900) return;
+  // Skip auto-scroll if the hidden input (keyboard) is focused
+  if (document.activeElement === mobileInputEl) return;
   const idx = focus.y*W + focus.x;
   const cell = gridEl.children[idx];
   if (cell && typeof cell.scrollIntoView === 'function') {
@@ -410,7 +409,7 @@ if (mobileInputEl) {
   document.addEventListener('click', (ev)=>{
     const t = ev.target;
     if (t && (t.closest?.('.grid') || t.closest?.('.grid-wrap'))) {
-      mobileInputEl.focus();
+      try { mobileInputEl.focus({ preventScroll: true }); } catch { mobileInputEl.focus(); }
     }
   });
 }
