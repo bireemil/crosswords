@@ -58,6 +58,13 @@ body.light .clues li.active { background:#e9efff; }
 .level-btn:active { transform:translateY(1px); }
 .level-badge { position:absolute; top:6px; right:8px; font-size:10px; opacity:.85 }
 
-/* Mobile input helper */
-.mobile-input { position:fixed; top:0; left:0; opacity:0.01; height:1px; width:1px; padding:0; border:0; background:transparent; font-size:16px; line-height:16px; }
+/* On-screen keyboard */
+.osk { position:fixed; left:0; right:0; bottom:0; padding:8px 6px calc(8px + env(safe-area-inset-bottom)); background:#0f1220; border-top:1px solid #222a3b; display:grid; gap:6px; z-index:10; }
+.osk-row { display:flex; justify-content:center; gap:6px; }
+.osk-key { flex:0 0 auto; min-width:36px; height:40px; border-radius:8px; background:#1c2340; color:#fff; font-weight:700; border:1px solid #2a355a; box-shadow:0 1px 2px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05); }
+.osk-key:active { transform:translateY(1px); }
+.osk-key.wide { min-width:64px; }
+
+/* Deprecated mobile input helper (not used) */
+.mobile-input { display:none; }
 

@@ -19,7 +19,6 @@
       <label class="toggle"><input type="checkbox" id="toggle-dark"> Dark</label>
     </div>
   </header>
-  <input id="mobile-input" class="mobile-input" type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" inputmode="text" />
   <div class="current-clue">
     <span id="current-dir">Across</span>
     <span id="current-num">—</span>
@@ -45,6 +44,7 @@
   <footer class="status">
     <span id="status-text">Hints: 0</span>
   </footer>
+  <div id="osk" class="osk"></div>
 
   <script type="module" src="app.js"></script>
   <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}</script>

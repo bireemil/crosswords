@@ -8,6 +8,8 @@ const curDirEl = q('#current-dir');
 const curNumEl = q('#current-num');
 const curTextEl = q('#current-text');
 const mobileInputEl = q('#mobile-input');
+const oskEl = q('#osk');
+const isTouchDevice = (("ontouchstart" in window) || (navigator.maxTouchPoints||0) > 0);
 
 let puzzle = null; // { puzzle:[], solution:[], clues }
 let W = 0, H = 0;
@@ -42,12 +44,7 @@ function normalizeChar(ch) {
 }
 
 function focusMobileEditor() {
-  if (!mobileInputEl) return;
-  try { mobileInputEl.focus({ preventScroll: true }); } catch { mobileInputEl.focus(); }
-  try {
-    const len = mobileInputEl.value.length;
-    mobileInputEl.setSelectionRange(len, len);
-  } catch {}
+  // deprecated: system keyboard removed on touch devices
 }
 
 function computeNumbers() {
@@ -132,26 +129,24 @@ function renderGrid() {
   highlightFocus();
 }
 
+function toggleDirection() {
+  focus.dir = (focus.dir === 'across') ? 'down' : 'across';
+  highlightFocus();
+}
+
 function focusCell(y,x) {
   if (puzzle.puzzle[y][x] === '#') return;
   // toggle dir if already on same cell
   if (focus.y === y && focus.x === x) {
-    focus.dir = (focus.dir === 'across') ? 'down' : 'across';
-  } else {
-    focus.y = y; focus.x = x;
+    toggleDirection();
+    return;
   }
-  if (mobileInputEl) {
-    mobileInputEl.value = '';
-    lastMobileValue = '';
-    focusMobileEditor();
-  }
+  focus.y = y; focus.x = x;
   highlightFocus();
 }
 
 function scrollFocusIntoView() {
   if (window.innerWidth > 900) return;
-  // Skip auto-scroll if the hidden input (keyboard) is focused
-  if (document.activeElement === mobileInputEl) return;
   const idx = focus.y*W + focus.x;
   const cell = gridEl.children[idx];
   if (cell && typeof cell.scrollIntoView === 'function') {
@@ -218,12 +213,6 @@ function enterLetter(ch) {
   if (focus.dir==='across') move(1,0); else move(0,1);
   markCorrectWords();
   updateCurrentClue();
-  // Keep mobile input ready for the next character
-  if (mobileInputEl) {
-    mobileInputEl.value = '';
-    lastMobileValue = '';
-    focusMobileEditor();
-  }
 }
 
 function backspace() {
@@ -240,8 +229,6 @@ function backspace() {
     if (ltr) ltr.textContent='';
   }
   markCorrectWords();
-  // Keep mobile input focused
-  if (mobileInputEl) focusMobileEditor();
 }
 
 function check() {
@@ -277,6 +264,37 @@ function useHint() {
     statusEl.textContent = `Hints: ${hintCount}`;
     markCorrectWords();
   }
+}
+
+// On-screen keyboard (AZERTY)
+function renderOnScreenKeyboard() {
+  if (!oskEl) return;
+  if (!isTouchDevice) { oskEl.style.display = 'none'; return; }
+  const rows = [
+    ['A','Z','E','R','T','Y','U','I','O','P'],
+    ['Q','S','D','F','G','H','J','K','L','M'],
+    ['W','X','C','V','B','N']
+  ];
+  oskEl.innerHTML = '';
+  const makeRow = (keys) => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'osk-row';
+    keys.forEach((k)=>{
+      const btn = document.createElement('button');
+      btn.className = 'osk-key';
+      btn.textContent = k;
+      btn.addEventListener('click', ()=> enterLetter(k));
+      rowEl.appendChild(btn);
+    });
+    return rowEl;
+  };
+  rows.forEach(r => oskEl.appendChild(makeRow(r)));
+  const ctrlRow = document.createElement('div');
+  ctrlRow.className = 'osk-row';
+  const mk = (label, cls, handler) => { const b=document.createElement('button'); b.className = `osk-key ${cls||''}`.trim(); b.textContent=label; b.addEventListener('click', handler); return b; };
+  ctrlRow.appendChild(mk('↕', 'wide', toggleDirection));
+  ctrlRow.appendChild(mk('⌫', 'wide', backspace));
+  oskEl.appendChild(ctrlRow);
 }
 
 async function loadRandom() {
@@ -336,6 +354,7 @@ async function loadRandom() {
     for (const e of entries.down) { if (downMap.has(e.number)) e.clue = downMap.get(e.number); }
   }
   renderGrid();
+  renderOnScreenKeyboard();
 }
 
 function updateCurrentClue() {
@@ -396,6 +415,8 @@ function markCorrectWords() {
 }
 
 document.addEventListener('keydown', (e)=>{
+  // Remove system typing on touch devices; keep arrows for desktop only
+  if (isTouchDevice) return;
   if (e.key === 'ArrowLeft') move(-1,0);
   else if (e.key === 'ArrowRight') move(1,0);
   else if (e.key === 'ArrowUp') move(0,-1);
@@ -404,51 +425,7 @@ document.addEventListener('keydown', (e)=>{
   else if (e.key.length === 1) enterLetter(e.key);
 });
 
-// Mobile input handling
-if (mobileInputEl) {
-  mobileInputEl.value = '';
-  mobileInputEl.addEventListener('compositionstart', ()=>{ isComposing = true; });
-  mobileInputEl.addEventListener('compositionend', (e)=>{
-    isComposing = false;
-    const ch = (e.data||'').slice(-1);
-    if (ch) enterLetter(ch);
-    mobileInputEl.value = '';
-    lastMobileValue = '';
-    focusMobileEditor();
-  });
-  mobileInputEl.addEventListener('beforeinput', (e)=>{
-    if (e.inputType === 'deleteContentBackward') {
-      backspace();
-      e.preventDefault();
-      return;
-    }
-    if (e.inputType === 'insertText' || e.inputType === 'insertCompositionText') {
-      const ch = (e.data||'').slice(-1);
-      if (ch) enterLetter(ch);
-      e.preventDefault();
-      mobileInputEl.value = '';
-      lastMobileValue = '';
-      focusMobileEditor();
-    }
-  });
-  mobileInputEl.addEventListener('input', (e)=>{
-    if (isComposing) return; // wait for compositionend
-    const v = e.target.value || '';
-    if (v.length > lastMobileValue.length) {
-      const ch = v.slice(-1);
-      enterLetter(ch);
-    }
-    lastMobileValue = v;
-    if (mobileInputEl.value.length > 1) mobileInputEl.value = mobileInputEl.value.slice(-1);
-  });
-  // Focus hidden input when tapping anywhere on the grid area
-  document.addEventListener('click', (ev)=>{
-    const t = ev.target;
-    if (t && (t.closest?.('.grid') || t.closest?.('.grid-wrap'))) {
-      focusMobileEditor();
-    }
-  });
-}
+// Remove legacy mobile input handling entirely (no system keyboard)
 
 // Remove Reveal/Check/Random; add Menu and Hint only
 const menuBtn = q('#btn-menu');
