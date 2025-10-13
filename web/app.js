@@ -17,6 +17,33 @@ let entries = { across:[], down:[] };
 let solNorm = [];
 let hintCount = 0;
 let resizeTimer = null;
+let levelId = null; // fingerprint of current puzzle
+
+// ---- Stats (localStorage) ----
+function getStats() {
+  try {
+    const raw = localStorage.getItem('crossword:stats');
+    if (!raw) return { totalHints: 0, completed: [], perLevel: {} };
+    const obj = JSON.parse(raw);
+    if (!obj || typeof obj !== 'object') return { totalHints: 0, completed: [], perLevel: {} };
+    obj.totalHints = Number(obj.totalHints||0);
+    obj.completed = Array.isArray(obj.completed) ? obj.completed : [];
+    obj.perLevel = obj.perLevel && typeof obj.perLevel==='object' ? obj.perLevel : {};
+    return obj;
+  } catch { return { totalHints: 0, completed: [], perLevel: {} }; }
+}
+
+function saveStats(s) {
+  try { localStorage.setItem('crossword:stats', JSON.stringify(s)); } catch {}
+}
+
+function ensureLevelStats(s, id) {
+  if (!s.perLevel[id]) s.perLevel[id] = { hints: 0, completedAt: null };
+}
+
+function fingerprintPuzzle(p) {
+  try { return `${p.puzzle.length}x${p.puzzle[0].length}-${p.puzzle[0]}`; } catch { return 'unknown'; }
+}
 
 async function fetchTextWithFallback(path) {
   const bust = `${path}?v=${Date.now()}`;
@@ -202,6 +229,24 @@ function markCorrectWords() {
       } else { y++; }
     }
   }
+  // If all filled cells match solution for non-blocks, mark level completed
+  let allCorrect = true;
+  for (let y=0;y<H && allCorrect;y++) {
+    for (let x=0;x<W;x++) {
+      if (puzzle.puzzle[y][x] === '#') continue;
+      const want = (solNorm[y][x]||'').toUpperCase();
+      const got = normalizeChar(filled[y][x]||'');
+      if (!want || want !== got) { allCorrect = false; break; }
+    }
+  }
+  if (allCorrect) {
+    const stats = getStats();
+    ensureLevelStats(stats, levelId);
+    if (!stats.completed.includes(levelId)) stats.completed.push(levelId);
+    if (!stats.perLevel[levelId].completedAt) stats.perLevel[levelId].completedAt = new Date().toISOString();
+    saveStats(stats);
+    if (statusEl) statusEl.textContent = '✅ Completed!';
+  }
 }
 
 function move(dx, dy) {
@@ -261,6 +306,12 @@ function useHint() {
     if (ltr) ltr.textContent = want;
     hintCount += 1;
     refreshHintCounter();
+    // Update stats
+    const stats = getStats();
+    ensureLevelStats(stats, levelId);
+    stats.totalHints += 1;
+    stats.perLevel[levelId].hints += 1;
+    saveStats(stats);
     markCorrectWords();
   }
 }
@@ -321,6 +372,7 @@ async function loadRandom() {
   }
   try {
     H = puzzle.puzzle.length; W = puzzle.puzzle[0].length;
+    levelId = fingerprintPuzzle(puzzle);
     filled = Array.from({length:H}, ()=>Array(W).fill(''));
     solNorm = Array.from({length:H}, (_,y)=>Array.from({length:W}, (_,x)=>{ const ch = (puzzle.solution?.[y]?.[x]) || ''; if (!ch || ch==="#") return ch; return normalizeChar(ch);}));
     computeNumbers();
@@ -335,6 +387,10 @@ async function loadRandom() {
     renderGrid();
     renderOnScreenKeyboard();
     refreshHintCounter();
+    // Initialize stats for this levelId
+    const stats = getStats();
+    ensureLevelStats(stats, levelId);
+    saveStats(stats);
     if (statusEl) statusEl.textContent = '';
   } catch {
     if (statusEl) statusEl.textContent = 'Failed to render grid';
