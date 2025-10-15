@@ -47,7 +47,7 @@ function renderLevels() {
   if (!allPuzzles.length) { levelsEl.textContent = 'No puzzles.'; return; }
   // Deterministic selection anchored to 2025-10-14 (UTC) as day 0
   const nowDays = Math.floor(Date.now() / 86400000);
-  const epochDays = Math.floor(Date.UTC(2025, 9, 13) / 86400000); // month is 0-based
+  const epochDays = Math.floor(Date.UTC(2025, 9, 15) / 86400000); // month is 0-based
   const dayIndex = nowDays - epochDays; // 0 => 2025-10-14, 1 => next day, etc.
   const N = allPuzzles.length;
   const idxToday = ((dayIndex % N) + N) % N;         // day 0 -> first puzzle
