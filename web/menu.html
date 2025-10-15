@@ -12,12 +12,11 @@
 </head>
 <body class="menu-min">
   <h1 class="menu-title">Choisi ton niveau beauté</h1>
-  <div style="margin-bottom:12px"><button id="btn-reset" class="level-btn" style="height:44px;font-size:16px">Reset selection</button></div>
-  <div id="levels" class="levels-grid"></div>
+  <div class="menu-sub">Un nouveau chaque jour</div>
+  <div id="levels" class="daily-actions"></div>
 
   <script type="module" src="menu.js?v=3"></script>
-  <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}
-  const r=document.getElementById('btn-reset'); if(r){r.addEventListener('click',()=>{localStorage.removeItem('crossword:selected'); location.reload();});}</script>
+  <script>if ('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}</script>
 </body>
 </html>
 
