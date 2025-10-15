@@ -245,7 +245,7 @@ function markCorrectWords() {
     if (!stats.completed.includes(levelId)) stats.completed.push(levelId);
     if (!stats.perLevel[levelId].completedAt) stats.perLevel[levelId].completedAt = new Date().toISOString();
     saveStats(stats);
-    if (statusEl) statusEl.textContent = '✅ Completed!';
+    if (statusEl) statusEl.textContent = "✅ BRAVO C'EST GAGNANCE!";
   }
 }
 
